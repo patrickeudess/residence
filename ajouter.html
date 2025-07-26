@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter une résidence - Résidence CI+</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .form-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: black;
+            padding: 60px 0;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+        
+        .form-title {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .alert-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-home me-2"></i>Résidence CI+
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/ajouter">Ajouter une résidence</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Section Formulaire -->
+    <section class="form-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="form-card">
+                        <h2 class="form-title" style="color: black;">
+                            <i class="fas fa-plus-circle me-2"></i>Ajouter une résidence
+                        </h2>
+                        
+                        {% if message %}
+                        <div class="alert alert-{{ message_type }} alert-dismissible fade show" role="alert">
+                            {% if message_type == 'success' %}
+                                <i class="fas fa-check-circle me-2"></i>
+                            {% else %}
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+                        
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="nom" class="form-label">Nom de la résidence *</label>
+                                    <input type="text" class="form-control" id="nom" name="nom" 
+                                           value="{{ form_data.nom or '' }}" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="ville" class="form-label">Ville *</label>
+                                    <select class="form-select" id="ville" name="ville" required>
+                                        <option value="">Sélectionner une ville</option>
+                                        {% for ville in villes_existantes %}
+                                        <option value="{{ ville }}" {% if form_data.ville == ville %}selected{% endif %}>{{ ville }}</option>
+                                        {% endfor %}
+                                        <option value="Autre">Autre</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="adresse" class="form-label">Quartier/localisation</label>
+                                    <input type="text" class="form-control" id="adresse" name="adresse" 
+                                           value="{{ form_data.adresse or '' }}" placeholder="Ex: Quartier Commerce, Zone 4">
+                                    <div class="form-text">Quartier ou zone de localisation (optionnel)</div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="prix" class="form-label">Prix (FCFA)/nuitée *</label>
+                                    <input type="number" class="form-control" id="prix" name="prix" 
+                                           value="{{ form_data.prix or '' }}" min="1000" step="1000" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="telephone" class="form-label">Numéro de téléphone</label>
+                                    <input type="tel" class="form-control" id="telephone" name="telephone" 
+                                           value="{{ form_data.telephone or '' }}" placeholder="Numéro de téléphone" 
+                                           maxlength="14">
+                                    <div class="form-text">Numéro principal (optionnel)</div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="telephone2" class="form-label">Numéro de téléphone 2</label>
+                                    <input type="tel" class="form-control" id="telephone2" name="telephone2" 
+                                           value="{{ form_data.telephone2 or '' }}" placeholder="Numéro de téléphone" 
+                                           maxlength="14">
+                                    <div class="form-text">Numéro secondaire (optionnel)</div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="description" class="form-label">Description *</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3" required>{{ form_data.description or '' }}</textarea>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">Équipements disponibles</label>
+                                    <div class="row g-2">
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="wifi" name="equipements" value="WiFi">
+                                                <label class="form-check-label" for="wifi">WiFi</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="climatisation" name="equipements" value="Climatisation">
+                                                <label class="form-check-label" for="climatisation">Climatisation</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="parking" name="equipements" value="Parking">
+                                                <label class="form-check-label" for="parking">Parking</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="cuisine" name="equipements" value="Cuisine équipée">
+                                                <label class="form-check-label" for="cuisine">Cuisine équipée</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="salle_bain" name="equipements" value="Salle de bain privée">
+                                                <label class="form-check-label" for="salle_bain">Salle de bain privée</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="securite" name="equipements" value="Sécurité 24h">
+                                                <label class="form-check-label" for="securite">Sécurité 24h</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="jardin" name="equipements" value="Jardin">
+                                                <label class="form-check-label" for="jardin">Jardin</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="balcon" name="equipements" value="Balcon">
+                                                <label class="form-check-label" for="balcon">Balcon</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="latitude" class="form-label">Latitude</label>
+                                    <input type="number" step="any" class="form-control" id="latitude" name="latitude" 
+                                           value="{{ form_data.latitude or '' }}" placeholder="7.6903">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="longitude" class="form-label">Longitude</label>
+                                    <input type="number" step="any" class="form-control" id="longitude" name="longitude" 
+                                           value="{{ form_data.longitude or '' }}" placeholder="-5.0302">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="image" class="form-label">Photo de la résidence</label>
+                                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                    <div class="form-text">Formats acceptés : JPG, PNG, GIF (max 5MB)</div>
+                                </div>
+                                
+                                <div class="col-12 text-center mt-4">
+                                    <button type="submit" class="btn btn-primary btn-lg me-2">
+                                        <i class="fas fa-save me-2"></i>Enregistrer la résidence
+                                    </button>
+                                    <a href="/" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-arrow-left me-2"></i>Retour à l'accueil
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6><i class="fas fa-info-circle me-2"></i>Note importante</h6>
+                            <p class="mb-0 text-muted">
+                                Ce formulaire est actuellement en mode simulation. Dans une version future, 
+                                les données seront sauvegardées dans une base de données et les images seront 
+                                stockées sur un serveur.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="fas fa-home me-2"></i>Résidence CI+ - Votre partenaire immobilier en Côte d'Ivoire
+            </p>
+            <small class="text-muted">© 2024 Résidence CI+. Tous droits réservés.</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Validation en temps réel
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const prixInput = document.getElementById('prix');
+            const telephoneInput = document.getElementById('telephone');
+            const telephone2Input = document.getElementById('telephone2');
+            
+            // Validation du prix
+            prixInput.addEventListener('input', function() {
+                const prix = parseInt(this.value);
+                if (prix < 1000) {
+                    this.setCustomValidity('Le prix minimum est de 1000 FCFA');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
+            // Validation simple du téléphone
+            telephoneInput.addEventListener('input', function() {
+                const tel = this.value.replace(/\D/g, '');
+                if (tel.length > 14) {
+                    this.setCustomValidity('Le numéro ne peut pas dépasser 14 chiffres');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
+            // Auto-formatage simple du téléphone 2
+            telephone2Input.addEventListener('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                
+                // Limiter à 14 chiffres
+                if (value.length > 14) {
+                    value = value.substring(0, 14);
+                }
+                
+                this.value = value;
+            });
+            
+            // Auto-formatage simple du téléphone
+            telephoneInput.addEventListener('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                
+                // Limiter à 14 chiffres
+                if (value.length > 14) {
+                    value = value.substring(0, 14);
+                }
+                
+                this.value = value;
+            });
+            
+            // Calcul automatique du prix en fonction des équipements
+            const equipementsCheckboxes = document.querySelectorAll('input[name="equipements"]');
+            equipementsCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    let basePrix = 25000; // Prix de base
+                    let equipementsSelectionnes = document.querySelectorAll('input[name="equipements"]:checked');
+                    
+                    equipementsSelectionnes.forEach(equip => {
+                        switch(equip.value) {
+                            case 'Climatisation':
+                                basePrix += 10000;
+                                break;
+                            case 'WiFi':
+                                basePrix += 5000;
+                                break;
+                            case 'Parking':
+                                basePrix += 3000;
+                                break;
+                            case 'Cuisine équipée':
+                                basePrix += 8000;
+                                break;
+                            case 'Salle de bain privée':
+                                basePrix += 5000;
+                                break;
+                            case 'Sécurité 24h':
+                                basePrix += 7000;
+                                break;
+                        }
+                    });
+                    
+                    if (prixInput.value === '' || prixInput.value < basePrix) {
+                        prixInput.value = basePrix;
+                    }
+                });
+            });
+            
+            // Prévisualisation des coordonnées GPS
+            const latitudeInput = document.getElementById('latitude');
+            const longitudeInput = document.getElementById('longitude');
+            
+            // Coordonnées par défaut pour toutes les villes de la Côte d'Ivoire
+            const coordonneesVilles = {
+                'Abidjan': {lat: 5.3204, lng: -4.0161},
+                'Bouaké': {lat: 7.6903, lng: -5.0302},
+                'Korhogo': {lat: 9.4492, lng: -5.6421},
+                'Daloa': {lat: 6.8774, lng: -6.4502},
+                'San-Pédro': {lat: 4.7485, lng: -6.6363},
+                'Man': {lat: 7.4125, lng: -7.5533},
+                'Gagnoa': {lat: 6.1289, lng: -5.9506},
+                'Abengourou': {lat: 6.7297, lng: -3.4913},
+                'Bondoukou': {lat: 8.0404, lng: -2.8000},
+                'Yamoussoukro': {lat: 6.8167, lng: -5.2833},
+                'Grand-Bassam': {lat: 5.2000, lng: -3.7333},
+                'Bingerville': {lat: 5.3500, lng: -3.9000},
+                'Anyama': {lat: 5.5000, lng: -4.0500},
+                'Dabou': {lat: 5.3200, lng: -4.3700},
+                'Agboville': {lat: 5.9300, lng: -4.2200},
+                'Adzopé': {lat: 6.1000, lng: -3.8000},
+                'Tiassalé': {lat: 5.9000, lng: -4.8300},
+                'Séguéla': {lat: 7.9667, lng: -6.6667},
+                'Divo': {lat: 5.8333, lng: -5.3667},
+                'Ferkessédougou': {lat: 9.6000, lng: -5.2000},
+                'Katiola': {lat: 8.1333, lng: -5.1000},
+                'Soubré': {lat: 5.7833, lng: -6.6000},
+                'Guiglo': {lat: 6.5500, lng: -7.4833},
+                'Issia': {lat: 6.4833, lng: -6.5833},
+                'Sassandra': {lat: 4.9500, lng: -6.0833},
+                'Tabou': {lat: 4.4167, lng: -7.3500},
+                'Odienné': {lat: 9.5000, lng: -7.5667},
+                'Bouna': {lat: 9.2667, lng: -2.9833},
+                'Tengrela': {lat: 10.4833, lng: -6.4000},
+                'Boundiali': {lat: 9.5167, lng: -6.4833},
+                'Kouto': {lat: 9.8833, lng: -6.4000},
+                'M\'Batto': {lat: 6.2667, lng: -4.7000},
+                'Aboisso': {lat: 5.4667, lng: -3.2000},
+                'Agnibilékrou': {lat: 7.1333, lng: -3.2000},
+                'Arrah': {lat: 6.6667, lng: -3.9667},
+                'Bocanda': {lat: 7.0667, lng: -4.5333},
+                'Daoukro': {lat: 7.0500, lng: -3.9667},
+                'Méagui': {lat: 5.4000, lng: -7.3500},
+                'Oumé': {lat: 6.3833, lng: -5.4167},
+                'Sinfra': {lat: 6.6167, lng: -5.9167},
+                'Vavoua': {lat: 7.3833, lng: -6.4667},
+                'Zuenoula': {lat: 7.4333, lng: -6.0500},
+                'Toumodi': {lat: 6.5500, lng: -5.0167},
+                'Yakassé-Attobrou': {lat: 6.1000, lng: -3.6500},
+                'Alépé': {lat: 5.4833, lng: -3.6667},
+                'Bonoua': {lat: 5.2667, lng: -3.6000},
+                'Jacqueville': {lat: 5.2000, lng: -4.4167},
+                'Touba': {lat: 8.2833, lng: -7.6833},
+                'Kong': {lat: 9.1500, lng: -4.6167},
+                'Sakassou': {lat: 7.4500, lng: -5.2833},
+                'Tanda': {lat: 7.8000, lng: -3.1667},
+                'Tingrela': {lat: 10.4833, lng: -6.4000},
+                'Biankouma': {lat: 7.7333, lng: -7.6167},
+                'Danané': {lat: 7.2667, lng: -8.1500},
+                'Kouibly': {lat: 7.7333, lng: -7.6167},
+                'Sipilou': {lat: 7.6167, lng: -8.0333},
+                'Buyo': {lat: 6.2667, lng: -7.0500},
+                'Guéyo': {lat: 5.4667, lng: -6.0833},
+                'Lakota': {lat: 5.8500, lng: -5.6833},
+                'Oragahio': {lat: 5.4333, lng: -4.0333},
+                'Ayamé': {lat: 5.6000, lng: -3.1667},
+                'Bongouanou': {lat: 6.6500, lng: -4.2000},
+                'Dimbokro': {lat: 6.6500, lng: -4.7000},
+                'M\'Bahiakro': {lat: 7.4500, lng: -4.3333},
+                'Prikro': {lat: 7.7500, lng: -3.6500},
+                'Béoumi': {lat: 7.7667, lng: -5.5833},
+                'Botro': {lat: 7.8500, lng: -5.3167},
+                'Bouaflé': {lat: 6.9833, lng: -5.7500},
+                'Zuénoula': {lat: 7.4333, lng: -6.0500},
+                'Bangolo': {lat: 7.0167, lng: -7.4833},
+                'Duékoué': {lat: 6.7333, lng: -7.3500},
+                'Toulépleu': {lat: 6.5833, lng: -8.4167},
+                'Bloléquin': {lat: 6.4667, lng: -8.0000},
+                'Téapleu': {lat: 6.6167, lng: -8.2167},
+                'Zagné': {lat: 6.1167, lng: -7.4667}
+            };
+            
+            document.getElementById('ville').addEventListener('change', function() {
+                const ville = this.value;
+                if (coordonneesVilles[ville]) {
+                    latitudeInput.value = coordonneesVilles[ville].lat;
+                    longitudeInput.value = coordonneesVilles[ville].lng;
+                }
+            });
+            
+            // Compteur de caractères pour la description
+            const descriptionTextarea = document.getElementById('description');
+            const charCount = document.createElement('small');
+            charCount.className = 'text-muted';
+            charCount.style.fontSize = '0.8rem';
+            descriptionTextarea.parentNode.appendChild(charCount);
+            
+            descriptionTextarea.addEventListener('input', function() {
+                const count = this.value.length;
+                const max = 500;
+                charCount.textContent = `${count}/${max} caractères`;
+                
+                if (count > max * 0.9) {
+                    charCount.className = 'text-warning';
+                } else {
+                    charCount.className = 'text-muted';
+                }
+            });
+            
+            // Confirmation avant soumission
+            form.addEventListener('submit', function(e) {
+                const prix = parseInt(prixInput.value);
+                const telephone = telephoneInput.value.replace(/\D/g, '');
+                
+                if (prix < 1000) {
+                    e.preventDefault();
+                    alert('Le prix minimum est de 1000 FCFA');
+                    return false;
+                }
+                
+                if (telephone.length < 13) {
+                    e.preventDefault();
+                    alert('Le numéro de téléphone doit contenir 13 chiffres (225 + 10 chiffres)');
+                    return false;
+                }
+                
+                if (!confirm('Êtes-vous sûr de vouloir ajouter cette résidence ?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

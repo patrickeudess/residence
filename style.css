@@ -1,0 +1,163 @@
+/* Styles personnalisés pour Résidence CI+ */
+
+/* Animation pour les cartes au survol */
+.residence-card {
+    transition: all 0.3s ease;
+}
+
+.residence-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+/* Style pour les badges de prix */
+.price-badge {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+    font-weight: 600;
+}
+
+/* Style pour les boutons WhatsApp */
+.whatsapp-btn {
+    background: linear-gradient(45deg, #25D366, #128C7E);
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-btn:hover {
+    background: linear-gradient(45deg, #128C7E, #075E54);
+    transform: scale(1.02);
+}
+
+/* Style pour les tags d'équipements */
+.equipment-tag {
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    border: 1px solid #dee2e6;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Animation pour la section hero */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+/* Style pour les cartes de statistiques */
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stats-label {
+    font-size: 1rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Style pour la carte */
+#map {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border: 3px solid #fff;
+}
+
+/* Responsive design amélioré */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 0;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+    }
+    
+    .residence-image {
+        height: 180px;
+    }
+}
+
+/* Animation d'apparition pour les cartes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.residence-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Style pour le loader */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+} 
+
+/* Styles spécifiques pour la page d'édition */
+.form-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: black !important;
+    padding: 60px 0;
+}
+
+.form-section h2,
+.form-section h3,
+.form-section h4,
+.form-section h5,
+.form-section h6,
+.form-section p,
+.form-section label,
+.form-section span {
+    color: black !important;
+}
+
+.form-section .form-text {
+    color: #6c757d !important;
+} 

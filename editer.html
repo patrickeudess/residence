@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditer une résidence - Résidence CI+</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .form-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: black;
+            padding: 60px 0;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+        
+        .form-title {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .alert-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            color: white;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            border: none;
+            color: white;
+        }
+        
+        .residence-preview {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-home me-2"></i>Résidence CI+
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ajouter">Ajouter une résidence</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Section Formulaire -->
+    <section class="form-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="form-card">
+                        <h2 class="form-title">
+                            <i class="fas fa-edit me-2"></i>Éditer la résidence
+                        </h2>
+                        
+                        <!-- Aperçu de la résidence -->
+                        <div class="residence-preview">
+                            <h5><i class="fas fa-eye me-2"></i>Aperçu de la résidence</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <img src="{{ residence['image'] }}" class="img-fluid rounded" alt="{{ residence['nom'] }}" style="max-height: 200px;">
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>{{ residence['nom'] }}</h6>
+                                    <p><i class="fas fa-map-marker-alt me-1"></i>{{ residence['ville'] }}</p>
+                                    <p><strong>{{ "{:,}".format(residence['prix']) }} FCFA</strong>/mois</p>
+                                    <p>{{ residence['description'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if message %}
+                        <div class="alert alert-{{ message_type }} alert-dismissible fade show" role="alert">
+                            {% if message_type == 'success' %}
+                                <i class="fas fa-check-circle me-2"></i>
+                            {% else %}
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+                        
+                        <form method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="nom" class="form-label">Nom de la résidence *</label>
+                                    <input type="text" class="form-control" id="nom" name="nom" 
+                                           value="{{ residence['nom'] }}" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="ville" class="form-label">Ville *</label>
+                                    <select class="form-select" id="ville" name="ville" required>
+                                        <option value="">Sélectionner une ville</option>
+                                        {% for ville in villes_existantes %}
+                                        <option value="{{ ville }}" {% if residence['ville'] == ville %}selected{% endif %}>{{ ville }}</option>
+                                        {% endfor %}
+                                        <option value="Autre">Autre</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="adresse" class="form-label">Quartier/localisation</label>
+                                    <input type="text" class="form-control" id="adresse" name="adresse" 
+                                           value="{{ residence['adresse'] }}" placeholder="Ex: Quartier Commerce, Zone 4">
+                                    <div class="form-text">Quartier ou zone de localisation (optionnel)</div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="prix" class="form-label">Prix mensuel (FCFA) *</label>
+                                    <input type="number" class="form-control" id="prix" name="prix" 
+                                           value="{{ residence['prix'] }}" min="1000" step="1000" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="telephone" class="form-label">Numéro de téléphone</label>
+                                    <input type="tel" class="form-control" id="telephone" name="telephone" 
+                                           value="{{ residence['telephone'] }}" placeholder="Numéro de téléphone" 
+                                           maxlength="14">
+                                    <div class="form-text">Numéro principal (optionnel)</div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="telephone2" class="form-label">Numéro de téléphone 2</label>
+                                    <input type="tel" class="form-control" id="telephone2" name="telephone2" 
+                                           value="{{ residence['telephone2'] or '' }}" placeholder="Numéro de téléphone" 
+                                           maxlength="14">
+                                    <div class="form-text">Numéro secondaire (optionnel)</div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="description" class="form-label">Description *</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3" required>{{ residence['description'] }}</textarea>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">Équipements disponibles</label>
+                                    <div class="row g-2">
+                                        {% if residence['equipements'] %}
+                                            {% set equipements_list = residence['equipements'] %}
+                                            {% set equipements_list = equipements_list.split(', ') %}
+                                        {% else %}
+                                            {% set equipements_list = [] %}
+                                        {% endif %}
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="wifi" name="equipements" value="WiFi" 
+                                                       {% if 'WiFi' in equipements_list %}checked{% endif %}>
+                                                <label class="form-check-label" for="wifi">WiFi</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="climatisation" name="equipements" value="Climatisation" 
+                                                       {% if 'Climatisation' in equipements_list %}checked{% endif %}>
+                                                <label class="form-check-label" for="climatisation">Climatisation</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="parking" name="equipements" value="Parking" 
+                                                       {% if 'Parking' in equipements_list %}checked{% endif %}>
+                                                <label class="form-check-label" for="parking">Parking</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="cuisine" name="equipements" value="Cuisine équipée" 
+                                                       {% if 'Cuisine équipée' in equipements_list %}checked{% endif %}>
+                                                <label class="form-check-label" for="cuisine">Cuisine équipée</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="salle_bain" name="equipements" value="Salle de bain privée" 
+                                                       {% if 'Salle de bain privée' in equipements_list %}checked{% endif %}>
+                                                <label class="form-check-label" for="salle_bain">Salle de bain privée</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="securite" name="equipements" value="Sécurité 24h" 
+                                                       {% if 'Sécurité 24h' in equipements_list %}checked{% endif %}>
+                                                <label class="form-check-label" for="securite">Sécurité 24h</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="jardin" name="equipements" value="Jardin" 
+                                                       {% if 'Jardin' in equipements_list %}checked{% endif %}>
+                                                <label class="form-check-label" for="jardin">Jardin</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="balcon" name="equipements" value="Balcon" 
+                                                       {% if 'Balcon' in equipements_list %}checked{% endif %}>
+                                                <label class="form-check-label" for="balcon">Balcon</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="latitude" class="form-label">Latitude</label>
+                                    <input type="number" step="any" class="form-control" id="latitude" name="latitude" 
+                                           value="{{ residence['latitude'] }}" placeholder="7.6903">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="longitude" class="form-label">Longitude</label>
+                                    <input type="number" step="any" class="form-control" id="longitude" name="longitude" 
+                                           value="{{ residence['longitude'] }}" placeholder="-5.0302">
+                                </div>
+                                
+                                <div class="col-12 text-center mt-4">
+                                    <button type="submit" class="btn btn-primary btn-lg me-2">
+                                        <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                                    </button>
+                                    <a href="/" class="btn btn-outline-secondary btn-lg me-2">
+                                        <i class="fas fa-arrow-left me-2"></i>Retour à l'accueil
+                                    </a>
+                                    <button type="button" class="btn btn-danger btn-lg" onclick="supprimerResidence()">
+                                        <i class="fas fa-trash me-2"></i>Supprimer
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="fas fa-home me-2"></i>Résidence CI+ - Votre partenaire immobilier en Côte d'Ivoire
+            </p>
+            <small class="text-muted">© 2024 Résidence CI+. Tous droits réservés.</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Fonction pour supprimer une résidence
+        function supprimerResidence() {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette résidence ? Cette action est irréversible.')) {
+                fetch('/supprimer/{{ residence['id'] }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Résidence supprimée avec succès !');
+                        window.location.href = '/';
+                    } else {
+                        alert('Erreur lors de la suppression : ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors de la suppression');
+                });
+            }
+        }
+        
+        // Validation en temps réel
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const prixInput = document.getElementById('prix');
+            const telephoneInput = document.getElementById('telephone');
+            
+            // Validation du prix
+            prixInput.addEventListener('input', function() {
+                const prix = parseInt(this.value);
+                if (prix < 1000) {
+                    this.setCustomValidity('Le prix minimum est de 1000 FCFA');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
+            // Auto-formatage du téléphone
+            telephoneInput.addEventListener('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length > 0) {
+                    if (value.startsWith('225')) {
+                        value = value.replace(/(\d{3})(\d{2})(\d{3})(\d{2})/, '$1 $2 $3 $4');
+                    } else {
+                        value = value.replace(/(\d{2})(\d{3})(\d{2})/, '$1 $2 $3');
+                    }
+                }
+                this.value = value;
+            });
+            
+            // Compteur de caractères pour la description
+            const descriptionTextarea = document.getElementById('description');
+            const charCount = document.createElement('small');
+            charCount.className = 'text-muted';
+            charCount.style.fontSize = '0.8rem';
+            descriptionTextarea.parentNode.appendChild(charCount);
+            
+            descriptionTextarea.addEventListener('input', function() {
+                const count = this.value.length;
+                const max = 500;
+                charCount.textContent = `${count}/${max} caractères`;
+                
+                if (count > max * 0.9) {
+                    charCount.className = 'text-warning';
+                } else {
+                    charCount.className = 'text-muted';
+                }
+            });
+            
+            // Déclencher l'événement pour afficher le compteur initial
+            descriptionTextarea.dispatchEvent(new Event('input'));
+        });
+    </script>
+</body>
+</html> 
