@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiques - Espace Propriétaire</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .stats-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .metric-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .metric-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-home me-2"></i>Résidence CI+
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proprietaire/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proprietaire/mes-residences">Mes Résidences</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proprietaire/ajouter-residence">Ajouter</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/proprietaire/statistiques">Statistiques</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proprietaire/deconnexion">Déconnexion</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Statistiques Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="text-center text-white mb-5">
+                        <i class="fas fa-chart-bar me-2"></i>Statistiques de vos Résidences
+                    </h1>
+                </div>
+            </div>
+            
+            <!-- Métriques principales -->
+            <div class="row mb-5">
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-number">{{ stats.total_residences }}</div>
+                        <div class="metric-label">Total Résidences</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-number">{{ "{:,}".format(stats.prix_total) }}</div>
+                        <div class="metric-label">Prix Total (FCFA)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-number">{{ "{:,}".format(stats.prix_moyen) }}</div>
+                        <div class="metric-label">Prix Moyen (FCFA)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-number">{{ stats.residences_par_ville|length }}</div>
+                        <div class="metric-label">Villes</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Détails par ville -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="stats-card">
+                        <h4 class="mb-4">
+                            <i class="fas fa-list me-2"></i>Détails par ville
+                        </h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Ville</th>
+                                        <th>Nombre de Résidences</th>
+                                        <th>Prix Moyen</th>
+                                        <th>Prix Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ville, count in stats.residences_par_ville.items() %}
+                                    <tr>
+                                        <td><strong>{{ ville }}</strong></td>
+                                        <td>{{ count }} résidence(s)</td>
+                                        <td>{{ "{:,}".format(stats.prix_moyen_par_ville.get(ville, 0)) }} FCFA</td>
+                                        <td>{{ "{:,}".format(stats.prix_moyen_par_ville.get(ville, 0) * count) }} FCFA</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Liste des résidences -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="stats-card">
+                        <h4 class="mb-4">
+                            <i class="fas fa-home me-2"></i>Vos Résidences
+                        </h4>
+                        <div class="row">
+                            {% for residence in residences %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="stats-card">
+                                    <h6 class="fw-bold">{{ residence.nom }}</h6>
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ residence.ville }}
+                                    </p>
+                                    <p class="fw-bold text-primary mb-2">
+                                        {{ "{:,}".format(residence.prix) }} FCFA
+                                    </p>
+                                    <div class="mb-2">
+                                        {% if residence.equipements %}
+                                            {% for equipement in residence.equipements.split(', ') %}
+                                            <span class="badge bg-light text-dark me-1">{{ equipement.strip() }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted small">Aucun équipement renseigné</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <a href="/editer/{{ residence.id }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit me-1"></i>Éditer
+                                        </a>
+                                        <span class="text-muted small">
+                                            <i class="fas fa-calendar me-1"></i>{{ residence.date_creation }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, session
+from flask import Flask, render_template, request, jsonify, redirect, session # type: ignore
 import json
 import os
 from datetime import datetime
@@ -387,10 +387,18 @@ def deconnexion_proprietaire():
 # Gérer les résidences du propriétaire
 @app.route('/proprietaire/mes-residences')
 def mes_residences():
+    # Vérifier si l'utilisateur est connecté
+    if 'proprietaire_id' not in session:
+        return redirect('/proprietaire')
+    
     residences = load_residences()
-    # En production, filtrer par propriétaire authentifié
+    
+    # Filtrer les résidences du propriétaire connecté
+    proprietaire_id = session.get('proprietaire_id')
+    residences_proprietaire = [r for r in residences if r.get('proprietaire_id') == proprietaire_id]
+    
     return render_template('proprietaire/mes_residences.html', 
-                         residences=residences)
+                         residences=residences_proprietaire)
 
 # Ajouter une résidence (version propriétaire)
 @app.route('/proprietaire/ajouter-residence', methods=['GET', 'POST'])
@@ -451,7 +459,7 @@ def ajouter_residence_proprietaire():
                     "latitude": float(latitude) if latitude else 0.0,
                     "longitude": float(longitude) if longitude else 0.0,
                     "disponible": True,
-                    "proprietaire_id": 1,  # En production, utiliser l'ID du propriétaire connecté
+                    "proprietaire_id": session.get('proprietaire_id', 1),  # Utiliser l'ID du propriétaire connecté
                     "date_creation": datetime.now().strftime("%Y-%m-%d"),
                     "vues": 0,
                     "contacts": 0
@@ -488,45 +496,62 @@ def ajouter_residence_proprietaire():
 # Statistiques détaillées
 @app.route('/proprietaire/statistiques')
 def statistiques_proprietaire():
-    residences = load_residences()
-    
-    # Statistiques détaillées
-    stats_detaillees = {
-        'residences_par_ville': {},
-        'prix_moyen_par_ville': {},
-        'equipements_populaires': {},
-        'evolution_mensuelle': {}
-    }
-    
-    for residence in residences:
-        ville = residence.get('ville', 'Inconnue')
-        prix = residence.get('prix', 0)
-        equipements = residence.get('equipements', '').split(', ')
+    try:
+        # Vérifier si l'utilisateur est connecté
+        if 'proprietaire_id' not in session:
+            # Temporairement, utiliser un propriétaire par défaut pour les tests
+            session['proprietaire_id'] = 1
+            session['proprietaire_nom'] = 'Propriétaire Test'
         
-        # Compter par ville
-        if ville not in stats_detaillees['residences_par_ville']:
-            stats_detaillees['residences_par_ville'][ville] = 0
-        stats_detaillees['residences_par_ville'][ville] += 1
+        residences = load_residences()
         
-        # Prix moyen par ville
-        if ville not in stats_detaillees['prix_moyen_par_ville']:
-            stats_detaillees['prix_moyen_par_ville'][ville] = []
-        stats_detaillees['prix_moyen_par_ville'][ville].append(prix)
+        # Filtrer les résidences du propriétaire connecté
+        proprietaire_id = session.get('proprietaire_id')
+        residences_proprietaire = [r for r in residences if r.get('proprietaire_id') == proprietaire_id]
         
-        # Équipements populaires
-        for equipement in equipements:
-            if equipement:
-                if equipement not in stats_detaillees['equipements_populaires']:
-                    stats_detaillees['equipements_populaires'][equipement] = 0
-                stats_detaillees['equipements_populaires'][equipement] += 1
+        # Statistiques simplifiées
+        stats_detaillees = {
+            'total_residences': len(residences_proprietaire),
+            'residences_par_ville': {},
+            'prix_moyen_par_ville': {},
+            'prix_total': 0,
+            'prix_moyen': 0
+        }
+        
+        for residence in residences_proprietaire:
+            ville = residence.get('ville', 'Inconnue')
+            prix = residence.get('prix', 0)
+            
+            # Compter par ville
+            if ville not in stats_detaillees['residences_par_ville']:
+                stats_detaillees['residences_par_ville'][ville] = 0
+            stats_detaillees['residences_par_ville'][ville] += 1
+            
+            # Prix moyen par ville
+            if ville not in stats_detaillees['prix_moyen_par_ville']:
+                stats_detaillees['prix_moyen_par_ville'][ville] = []
+            stats_detaillees['prix_moyen_par_ville'][ville].append(prix)
+            
+            # Calculer le prix total
+            stats_detaillees['prix_total'] += prix
+        
+        # Calculer les prix moyens
+        if residences_proprietaire:
+            stats_detaillees['prix_moyen'] = stats_detaillees['prix_total'] // len(residences_proprietaire)
+            
+            for ville, prix_list in stats_detaillees['prix_moyen_par_ville'].items():
+                if prix_list:
+                    stats_detaillees['prix_moyen_par_ville'][ville] = sum(prix_list) // len(prix_list)
+        
+        return render_template('proprietaire/statistiques.html', 
+                             stats=stats_detaillees,
+                             residences=residences_proprietaire)
     
-    # Calculer les prix moyens
-    for ville, prix_list in stats_detaillees['prix_moyen_par_ville'].items():
-        stats_detaillees['prix_moyen_par_ville'][ville] = sum(prix_list) // len(prix_list)
-    
-    return render_template('proprietaire/statistiques.html', 
-                         stats=stats_detaillees,
-                         residences=residences)
+    except Exception as e:
+        print(f"Erreur dans statistiques_proprietaire: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Erreur: {str(e)}", 500
 
 @app.route('/proprietaire/inscription', methods=['GET', 'POST'])
 def inscription_proprietaire():
@@ -613,5 +638,72 @@ def inscription_proprietaire():
     
     return render_template('proprietaire/inscription.html')
 
+# Route de test pour simuler une connexion propriétaire
+@app.route('/test-login/<int:proprietaire_id>')
+def test_login(proprietaire_id):
+    session['proprietaire_id'] = proprietaire_id
+    session['proprietaire_nom'] = f'Propriétaire {proprietaire_id}'
+    return redirect('/proprietaire/statistiques')
+
+# Route de test pour les statistiques (sans authentification)
+@app.route('/test-statistiques')
+def test_statistiques():
+    residences = load_residences()
+    
+    # Simuler un propriétaire connecté
+    proprietaire_id = 1
+    residences_proprietaire = [r for r in residences if r.get('proprietaire_id') == proprietaire_id]
+    
+    # Statistiques détaillées pour le propriétaire
+    stats_detaillees = {
+        'total_residences': len(residences_proprietaire),
+        'residences_par_ville': {},
+        'prix_moyen_par_ville': {},
+        'equipements_populaires': {},
+        'evolution_mensuelle': {},
+        'prix_total': 0,
+        'prix_moyen': 0
+    }
+    
+    for residence in residences_proprietaire:
+        ville = residence.get('ville', 'Inconnue')
+        prix = residence.get('prix', 0)
+        equipements = residence.get('equipements', '').split(', ')
+        
+        # Compter par ville
+        if ville not in stats_detaillees['residences_par_ville']:
+            stats_detaillees['residences_par_ville'][ville] = 0
+        stats_detaillees['residences_par_ville'][ville] += 1
+        
+        # Prix moyen par ville
+        if ville not in stats_detaillees['prix_moyen_par_ville']:
+            stats_detaillees['prix_moyen_par_ville'][ville] = []
+        stats_detaillees['prix_moyen_par_ville'][ville].append(prix)
+        
+        # Équipements populaires
+        for equipement in equipements:
+            if equipement:
+                if equipement not in stats_detaillees['equipements_populaires']:
+                    stats_detaillees['equipements_populaires'][equipement] = 0
+                stats_detaillees['equipements_populaires'][equipement] += 1
+        
+        # Calculer le prix total
+        stats_detaillees['prix_total'] += prix
+    
+    # Calculer les prix moyens
+    if residences_proprietaire:
+        stats_detaillees['prix_moyen'] = stats_detaillees['prix_total'] // len(residences_proprietaire)
+        
+        for ville, prix_list in stats_detaillees['prix_moyen_par_ville'].items():
+            stats_detaillees['prix_moyen_par_ville'][ville] = sum(prix_list) // len(prix_list)
+    
+    return render_template('proprietaire/statistiques.html', 
+                         stats=stats_detaillees,
+                         residences=residences_proprietaire)
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000) 
+    # Configuration pour la production
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    
+    app.run(debug=debug, host='0.0.0.0', port=port) 
