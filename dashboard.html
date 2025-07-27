@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Propriétaire - Résidence CI+</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <style>
+        .dashboard-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-icon {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stats-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .residence-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+        
+        .btn-action {
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-home me-2"></i>Résidence CI+
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proprietaire/mes-residences">Mes Résidences</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proprietaire/ajouter-residence">Ajouter</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proprietaire/statistiques">Statistiques</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Section -->
+    <section class="dashboard-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="text-center text-white mb-5">
+                        <i class="fas fa-chart-line me-2"></i>Dashboard Propriétaire
+                    </h1>
+                </div>
+            </div>
+            
+            <!-- Statistiques -->
+            <div class="row mb-5">
+                <div class="col-md-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="stats-number">{{ stats.total_residences }}</div>
+                        <div class="stats-label">Total Résidences</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-icon">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="stats-number">{{ stats.vues_total }}</div>
+                        <div class="stats-label">Vues Total</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="stats-number">{{ stats.contacts_total }}</div>
+                        <div class="stats-label">Contacts Total</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="stats-card text-center">
+                        <div class="stats-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stats-number">{{ "{:,}".format(stats.prix_moyen) }}</div>
+                        <div class="stats-label">Prix Moyen (FCFA)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions rapides -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="stats-card">
+                        <h4 class="mb-3">
+                            <i class="fas fa-bolt me-2"></i>Actions Rapides
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <a href="/proprietaire/ajouter-residence" class="btn btn-primary w-100 mb-2">
+                                    <i class="fas fa-plus me-2"></i>Ajouter une résidence
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/proprietaire/mes-residences" class="btn btn-info w-100 mb-2">
+                                    <i class="fas fa-list me-2"></i>Gérer mes résidences
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/proprietaire/statistiques" class="btn btn-success w-100 mb-2">
+                                    <i class="fas fa-chart-bar me-2"></i>Voir les statistiques
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/" class="btn btn-secondary w-100 mb-2">
+                                    <i class="fas fa-eye me-2"></i>Voir le site public
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Résidences récentes -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="residence-table">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Résidence</th>
+                                        <th>Ville</th>
+                                        <th>Prix</th>
+                                        <th>Vues</th>
+                                        <th>Contacts</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for residence in residences[:5] %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ residence.nom }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ residence.adresse }}</small>
+                                        </td>
+                                        <td>{{ residence.ville }}</td>
+                                        <td>
+                                            <span class="badge bg-success">
+                                                {{ "{:,}".format(residence.prix) }} FCFA
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                {{ residence.vues or 0 }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning">
+                                                {{ residence.contacts or 0 }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="/editer/{{ residence.id }}" class="btn btn-sm btn-outline-primary btn-action">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button onclick="supprimerResidence({{ residence.id }}, '{{ residence.nom }}')" 
+                                                    class="btn btn-sm btn-outline-danger btn-action">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if residences|length > 5 %}
+                    <div class="text-center mt-3">
+                        <a href="/proprietaire/mes-residences" class="btn btn-outline-primary">
+                            Voir toutes les résidences ({{ residences|length }})
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Fonction pour supprimer une résidence
+        function supprimerResidence(id, nom) {
+            if (confirm(`Êtes-vous sûr de vouloir supprimer la résidence "${nom}" ? Cette action est irréversible.`)) {
+                fetch(`/supprimer/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Résidence supprimée avec succès !');
+                        location.reload();
+                    } else {
+                        alert('Erreur lors de la suppression : ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors de la suppression');
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

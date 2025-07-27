@@ -3,107 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Résidence CI+ - Résidences meublées en Côte d'Ivoire</title>
-    
-    <!-- Bootstrap CSS -->
+    <title>Résidence CI+ - Votre plateforme de résidences en Côte d'Ivoire</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Leaflet CSS pour la carte -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Font Awesome pour les icônes -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 80px 0;
-        }
-        
-        .search-section {
-            background-color: #f8f9fa;
-            padding: 40px 0;
-        }
-        
-        .residence-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            height: 100%;
-        }
-        
-        .residence-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-        
-        .residence-image {
-            height: 200px;
-            object-fit: cover;
-        }
-        
-        .price-badge {
-            background: linear-gradient(45deg, #28a745, #20c997);
-            color: white;
-            font-weight: bold;
-        }
-        
-        .equipment-tag {
-            background-color: #e9ecef;
-            color: #495057;
-            font-size: 0.8rem;
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin: 2px;
-            display: inline-block;
-        }
-        
-        .whatsapp-btn {
-            background: linear-gradient(45deg, #25D366, #128C7E);
-            border: none;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .whatsapp-btn:hover {
-            background: linear-gradient(45deg, #128C7E, #075E54);
-            color: white;
-        }
-        
-        #map {
-            height: 400px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .filter-section {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-        }
-        
-        .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-        }
-        
-        .stats-label {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">
+            <a class="navbar-brand fw-bold" href="/">
                 <i class="fas fa-home me-2"></i>Résidence CI+
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -112,242 +22,481 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#residences">Résidences</a>
+                        <a class="nav-link" href="#accueil">Accueil</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#carte">Carte</a>
+                        <a class="nav-link" href="#proprietaires">Propriétaires</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/ajouter">Ajouter une résidence</a>
+                        <a class="nav-link" href="#visiteurs">Visiteurs</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Contact</a>
+                    </li>
+                    {% if session.get('proprietaire_id') %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-tie me-1"></i>{{ session.get('proprietaire_nom', 'Propriétaire') }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/proprietaire/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="/proprietaire/mes-residences">
+                                <i class="fas fa-home me-2"></i>Mes Résidences
+                            </a></li>
+                            <li><a class="dropdown-item" href="/proprietaire/ajouter-residence">
+                                <i class="fas fa-plus me-2"></i>Ajouter Résidence
+                            </a></li>
+                            <li><a class="dropdown-item" href="/proprietaire/statistiques">
+                                <i class="fas fa-chart-bar me-2"></i>Statistiques
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/proprietaire/deconnexion">
+                                <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Section Hero -->
-    <section class="hero-section">
-        <div class="container text-center">
-            <h1 class="display-4 fw-bold mb-4">
-                <i class="fas fa-map-marker-alt me-3"></i>
-                Résidence CI+
-            </h1>
-            <p class="lead mb-4">Découvrez les meilleures résidences meublées des villes secondaires de Côte d'Ivoire</p>
-            <div class="row justify-content-center">
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="stats-card">
-                        <div class="stats-number">{{ residences|length }}</div>
-                        <div class="stats-label">Résidences</div>
+    <!-- Hero Section -->
+    <section id="accueil" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center min-vh-100">
+                <div class="col-lg-6">
+                    <div class="hero-content">
+                        <h1 class="display-4 fw-bold text-white mb-4">
+                            Trouvez votre résidence idéale en Côte d'Ivoire
+                        </h1>
+                        <p class="lead text-white-50 mb-5">
+                            Découvrez des résidences meublées dans les villes secondaires de Côte d'Ivoire. 
+                            Que vous soyez propriétaire ou visiteur, nous avons ce qu'il vous faut.
+                        </p>
+                        <div class="hero-buttons">
+                            <a href="#proprietaires" class="btn btn-primary btn-lg me-3 mb-3">
+                                <i class="fas fa-user-tie me-2"></i>Espace Propriétaire
+                            </a>
+                            <a href="#visiteurs" class="btn btn-outline-light btn-lg mb-3">
+                                <i class="fas fa-search me-2"></i>Consulter les Résidences
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="stats-card">
-                        <div class="stats-number">{{ villes|length }}</div>
-                        <div class="stats-label">Villes</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="stats-card">
-                        <div class="stats-number">{{ (residences|sum(attribute='prix') / residences|length)|round|int if residences else 0 }}</div>
-                        <div class="stats-label">Prix moyen (FCFA)</div>
+                <div class="col-lg-6">
+                    <div class="hero-image text-center">
+                        <i class="fas fa-building fa-8x text-white-50"></i>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Section Recherche -->
-    <section class="search-section" id="recherche">
+    <!-- Section Propriétaires -->
+    <section id="proprietaires" class="py-5 bg-light">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <div class="filter-section">
-                        <h3 class="text-center mb-4">
-                            <i class="fas fa-search me-2"></i>Rechercher une résidence
-                        </h3>
-                        <form method="GET" action="/" class="row g-3">
-                            <div class="col-md-3">
-                                <label for="ville" class="form-label">Ville</label>
-                                <select class="form-select" id="ville" name="ville">
-                                    <option value="">Toutes les villes</option>
-                                    {% for ville in villes %}
-                                    <option value="{{ ville }}" {% if filters.ville == ville %}selected{% endif %}>{{ ville }}</option>
-                                    {% endfor %}
-                                </select>
+            <div class="row">
+                <div class="col-12 text-center mb-5">
+                    <h2 class="display-5 fw-bold text-primary">
+                        <i class="fas fa-user-tie me-3"></i>Espace Propriétaires
+                    </h2>
+                    <p class="lead text-muted">Gérez vos résidences et maximisez vos revenus</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100 border-0 shadow-lg">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-sign-in-alt fa-3x text-primary mb-3"></i>
+                                <h3 class="h4 fw-bold">Connexion Propriétaire</h3>
+                                <p class="text-muted">Accédez à votre espace de gestion</p>
                             </div>
-                            <div class="col-md-3">
-                                <label for="prix_min" class="form-label">Prix minimum (FCFA)</label>
-                                <input type="number" class="form-control" id="prix_min" name="prix_min" 
-                                       value="{{ filters.prix_min }}" placeholder="25000">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="prix_max" class="form-label">Prix maximum (FCFA)</label>
-                                <input type="number" class="form-control" id="prix_max" name="prix_max" 
-                                       value="{{ filters.prix_max }}" placeholder="60000">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="equipements" class="form-label">Équipements</label>
-                                <input type="text" class="form-control" id="equipements" name="equipements" 
-                                       value="{{ filters.equipements }}" placeholder="WiFi, Climatisation">
-                            </div>
-                            <div class="col-12 text-center">
-                                <button type="submit" class="btn btn-primary btn-lg me-2">
-                                    <i class="fas fa-search me-2"></i>Rechercher
-                                </button>
-                                <a href="/" class="btn btn-outline-secondary btn-lg">
-                                    <i class="fas fa-times me-2"></i>Réinitialiser
+                            <div class="d-grid">
+                                <a href="/proprietaire" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Se Connecter
                                 </a>
                             </div>
-                        </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card h-100 border-0 shadow-lg">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-user-plus fa-3x text-success mb-3"></i>
+                                <h3 class="h4 fw-bold">Nouveau Propriétaire</h3>
+                                <p class="text-muted">Créez votre compte et commencez à louer</p>
+                            </div>
+                            <div class="d-grid">
+                                <a href="/proprietaire/inscription" class="btn btn-success btn-lg">
+                                    <i class="fas fa-user-plus me-2"></i>Créer un Compte
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card border-0 shadow">
+                        <div class="card-body p-4">
+                            <h4 class="fw-bold text-primary mb-4">
+                                <i class="fas fa-star me-2"></i>Avantages pour les Propriétaires
+                            </h4>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <i class="fas fa-chart-line fa-2x text-primary mb-2"></i>
+                                        <h6 class="fw-bold">Statistiques Détaillées</h6>
+                                        <small class="text-muted">Suivez vos performances</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <i class="fas fa-edit fa-2x text-success mb-2"></i>
+                                        <h6 class="fw-bold">Gestion Facile</h6>
+                                        <small class="text-muted">Ajoutez/modifiez vos annonces</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <i class="fas fa-eye fa-2x text-info mb-2"></i>
+                                        <h6 class="fw-bold">Visibilité Maximale</h6>
+                                        <small class="text-muted">Exposition sur notre plateforme</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <i class="fas fa-phone fa-2x text-warning mb-2"></i>
+                                        <h6 class="fw-bold">Contacts Directs</h6>
+                                        <small class="text-muted">Recevez des demandes qualifiées</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Section Carte -->
-    <section class="py-5" id="carte">
+    <!-- Section Visiteurs -->
+    <section id="visiteurs" class="py-5">
         <div class="container">
-            <h2 class="text-center mb-4">
-                <i class="fas fa-map me-2"></i>Carte interactive
-            </h2>
-            <div id="map"></div>
-        </div>
-    </section>
+            <div class="row">
+                <div class="col-12 text-center mb-5">
+                    <h2 class="display-5 fw-bold text-primary">
+                        <i class="fas fa-search me-3"></i>Espace Visiteurs
+                    </h2>
+                    <p class="lead text-muted">Découvrez et réservez vos résidences idéales</p>
+                </div>
+            </div>
 
-    <!-- Section Résidences -->
-    <section class="py-5 bg-light" id="residences">
-        <div class="container">
-            <h2 class="text-center mb-5">
-                <i class="fas fa-home me-2"></i>Nos résidences
-            </h2>
-            
-            {% if residences %}
-            <div class="row g-4">
+            <!-- Filtres Avancés -->
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-filter me-2"></i>Filtres de Recherche
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <input type="text" id="searchText" class="form-control" placeholder="Rechercher...">
+                        </div>
+                        <div class="col-md-2">
+                            <select id="cityFilter" class="form-select">
+                                <option value="">Toutes les villes</option>
+                                {% for ville in villes %}
+                                <option value="{{ ville }}">{{ ville }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="typeFilter" class="form-select">
+                                <option value="">Tous les types</option>
+                                <option value="Appartement">Appartement</option>
+                                <option value="Maison">Maison</option>
+                                <option value="Studio">Studio</option>
+                                <option value="Villa">Villa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="priceFilter" class="form-select">
+                                <option value="">Tous les prix</option>
+                                <option value="0-5000">0 - 5,000 FCFA</option>
+                                <option value="5000-10000">5,000 - 10,000 FCFA</option>
+                                <option value="10000-20000">10,000 - 20,000 FCFA</option>
+                                <option value="20000+">20,000+ FCFA</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="equipmentFilter" class="form-select">
+                                <option value="">Tous les équipements</option>
+                                <option value="WiFi">WiFi</option>
+                                <option value="Climatisation">Climatisation</option>
+                                <option value="Cuisine">Cuisine</option>
+                                <option value="Parking">Parking</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button id="clearFilters" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compteur de Résidences -->
+            <div class="text-center mb-4">
+                <span class="badge bg-primary fs-6 px-4 py-2">
+                    <i class="fas fa-home me-2"></i>
+                    <span id="residenceCount">{{ residences|length }}</span> résidences disponibles
+                </span>
+                {% if session.get('proprietaire_id') %}
+                <div class="mt-2">
+                    <span class="badge bg-success fs-6 px-3 py-1">
+                        <i class="fas fa-user-tie me-1"></i>Mode Propriétaire - {{ session.get('proprietaire_nom', 'Propriétaire') }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Résidences -->
+            <div class="row g-4" id="residencesContainer">
                 {% for residence in residences %}
-                <div class="col-lg-4 col-md-6">
-                    <div class="card residence-card h-100">
-                        <img src="{{ residence['image'] }}" class="card-img-top residence-image" alt="{{ residence['nom'] }}">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ residence['nom'] }}</h5>
-                            <p class="card-text text-muted">
+                <div class="col-lg-4 col-md-6 residence-card" 
+                     data-ville="{{ residence.ville }}" 
+                     data-type="{{ residence.type }}" 
+                     data-prix="{{ residence.prix }}"
+                     data-equipements="{{ residence.equipements }}">
+                    <div class="card h-100 border-0 shadow-lg residence-item">
+                        <div class="position-relative">
+                            <img src="{{ residence.photo }}" class="card-img-top" alt="{{ residence.nom }}" 
+                                 style="height: 200px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-primary fs-6">{{ "{:,}".format(residence.prix) }} FCFA</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">{{ residence['nom'] }}</h5>
+                            <p class="text-muted mb-2">
                                 <i class="fas fa-map-marker-alt me-1"></i>{{ residence['ville'] }}
                             </p>
-                            <p class="card-text">{{ residence['description'] }}</p>
+                            <p class="card-text">{{ residence.get('description', 'Aucune description disponible')[:100] }}...</p>
                             
+                            {% set equipements = residence['equipements'] %}
                             <div class="mb-3">
-                                {% if residence['equipements'] %}
-                                    {% set equipements = residence['equipements'] %}
-                                    {% for equipement in equipements.split(', ') %}
-                                    <span class="equipment-tag">{{ equipement }}</span>
-                                    {% endfor %}
-                                {% else %}
-                                    <span class="equipment-tag">Aucun équipement spécifié</span>
-                                {% endif %}
+                                {% for equipement in equipements.split(',') %}
+                                <span class="badge bg-light text-dark me-1 mb-1">{{ equipement.strip() }}</span>
+                                {% endfor %}
                             </div>
                             
-                                                            <div class="mt-auto">
-                                                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="price-badge badge fs-6">{{ "{:,}".format(residence['prix']) }} FCFA</span>
-                                    <small class="text-muted">/mois</small>
-                                </div>
-                                
-                                <div class="d-grid gap-2">
-                                    <a href="https://wa.me/{{ residence['telephone'] }}?text=Bonjour, je suis intéressé par votre résidence {{ residence['nom'] }} à {{ residence['ville'] }}" 
-                                       class="btn whatsapp-btn" target="_blank">
-                                        <i class="fab fa-whatsapp me-2"></i>Contacter sur WhatsApp
+                            <div class="d-flex justify-content-between align-items-center">
+                                <!-- Boutons d'action - Visibles uniquement aux propriétaires connectés -->
+                                {% if session.get('proprietaire_id') %}
+                                <div class="btn-group">
+                                    <a href="/editer/{{ residence['id'] }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit me-1"></i>Éditer
                                     </a>
-                                    
-                                    <div class="btn-group w-100" role="group">
-                                        <a href="/editer/{{ residence['id'] }}" class="btn btn-outline-primary btn-sm">
-                                            <i class="fas fa-edit me-1"></i>Éditer
-                                        </a>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" 
-                                                onclick="supprimerResidence({{ residence['id'] }}, '{{ residence['nom'] }}')">
-                                            <i class="fas fa-trash me-1"></i>Supprimer
-                                        </button>
-                                    </div>
+                                    <button onclick="supprimerResidence({{ residence['id'] }})" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash me-1"></i>Supprimer
+                                    </button>
                                 </div>
-                                </div>
+                                {% endif %}
+                                
+                                <!-- Bouton Contact - Visible à tous -->
+                                <a href="https://wa.me/{{ residence['telephone'] }}?text=Bonjour, je suis intéressé par votre résidence {{ residence['nom'] }} à {{ residence['ville'] }}" 
+                                   target="_blank" class="btn btn-success btn-sm">
+                                    <i class="fab fa-whatsapp me-1"></i>Contact
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
-            {% else %}
-            <div class="text-center py-5">
-                <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">Aucune résidence trouvée</h4>
-                <p class="text-muted">Essayez de modifier vos critères de recherche</p>
-                <a href="/" class="btn btn-primary">Voir toutes les résidences</a>
+        </div>
+    </section>
+
+    <!-- Section Carte -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h3 class="fw-bold text-primary">
+                        <i class="fas fa-map me-2"></i>Carte Interactive
+                    </h3>
+                    <p class="text-muted">Localisez les résidences sur la carte</p>
+                </div>
             </div>
-            {% endif %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-body p-0">
+                            <div id="map" style="height: 500px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5">
+                    <h3 class="fw-bold text-primary">
+                        <i class="fas fa-question-circle me-2"></i>Questions Fréquentes
+                    </h3>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Comment réserver une résidence ?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Contactez directement le propriétaire via WhatsApp en cliquant sur le bouton "Contact" de la résidence qui vous intéresse.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Comment devenir propriétaire sur la plateforme ?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Cliquez sur "Créer un Compte" dans la section Propriétaires, puis ajoutez vos résidences via votre espace de gestion.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Les résidences sont-elles meublées ?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Oui, toutes les résidences listées sont meublées et équipées pour un séjour confortable.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="bg-dark text-white py-4">
-        <div class="container text-center">
-            <p class="mb-0">
-                <i class="fas fa-home me-2"></i>Résidence CI+ - Votre partenaire immobilier en Côte d'Ivoire
-            </p>
-            <small class="text-muted">© 2024 Résidence CI+. Tous droits réservés.</small>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="fw-bold">Résidence CI+</h5>
+                    <p class="text-muted">Votre plateforme de résidences en Côte d'Ivoire</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted">&copy; 2024 Résidence CI+. Tous droits réservés.</p>
+                </div>
+            </div>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <script>
-        // Initialisation de la carte
-        document.addEventListener('DOMContentLoaded', function() {
-            // Coordonnées du centre de la Côte d'Ivoire
-            const map = L.map('map').setView([7.5400, -5.5471], 7);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            
-            // Ajouter les marqueurs pour chaque résidence
-            const residences = {{ all_residences|tojson }};
-            
-            residences.forEach(function(residence) {
-                const marker = L.marker([residence.latitude, residence.longitude])
-                    .addTo(map)
-                    .bindPopup(`
-                        <div style="text-align: center;">
-                            <h6><strong>${residence.nom}</strong></h6>
-                            <p><i class="fas fa-map-marker-alt"></i> ${residence.ville}</p>
-                            <p><strong>${residence.prix.toLocaleString()} FCFA</strong>/mois</p>
-                            <a href="https://wa.me/${residence.telephone}?text=Bonjour, je suis intéressé par votre résidence ${residence.nom} à ${residence.ville}" 
-                               class="btn btn-success btn-sm" target="_blank">
-                                <i class="fab fa-whatsapp"></i> Contacter
-                            </a>
-                        </div>
-                    `);
-            });
-        });
-        
-        // Animation smooth scroll pour les liens de navigation
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+        // Filtres de recherche
+        function filterResidences() {
+            const searchText = document.getElementById('searchText').value.toLowerCase();
+            const cityFilter = document.getElementById('cityFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const priceFilter = document.getElementById('priceFilter').value;
+            const equipmentFilter = document.getElementById('equipmentFilter').value;
+
+            const residences = document.querySelectorAll('.residence-card');
+            let visibleCount = 0;
+
+            residences.forEach(residence => {
+                const title = residence.querySelector('.card-title').textContent.toLowerCase();
+                const city = residence.dataset.ville;
+                const type = residence.dataset.type;
+                const price = parseInt(residence.dataset.prix);
+                const equipments = residence.dataset.equipements.toLowerCase();
+
+                let visible = true;
+
+                // Filtre texte
+                if (searchText && !title.includes(searchText)) {
+                    visible = false;
                 }
+
+                // Filtre ville
+                if (cityFilter && city !== cityFilter) {
+                    visible = false;
+                }
+
+                // Filtre type
+                if (typeFilter && type !== typeFilter) {
+                    visible = false;
+                }
+
+                // Filtre prix
+                if (priceFilter) {
+                    const [min, max] = priceFilter.split('-').map(p => p === '+' ? Infinity : parseInt(p));
+                    if (price < min || (max !== Infinity && price > max)) {
+                        visible = false;
+                    }
+                }
+
+                // Filtre équipements
+                if (equipmentFilter && !equipments.includes(equipmentFilter.toLowerCase())) {
+                    visible = false;
+                }
+
+                residence.style.display = visible ? 'block' : 'none';
+                if (visible) visibleCount++;
             });
+
+            document.getElementById('residenceCount').textContent = visibleCount;
+        }
+
+        // Événements pour les filtres
+        document.getElementById('searchText').addEventListener('input', filterResidences);
+        document.getElementById('cityFilter').addEventListener('change', filterResidences);
+        document.getElementById('typeFilter').addEventListener('change', filterResidences);
+        document.getElementById('priceFilter').addEventListener('change', filterResidences);
+        document.getElementById('equipmentFilter').addEventListener('change', filterResidences);
+
+        // Bouton effacer les filtres
+        document.getElementById('clearFilters').addEventListener('click', function() {
+            document.getElementById('searchText').value = '';
+            document.getElementById('cityFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('priceFilter').value = '';
+            document.getElementById('equipmentFilter').value = '';
+            filterResidences();
         });
-        
-        // Fonction pour supprimer une résidence
-        function supprimerResidence(id, nom) {
-            if (confirm(`Êtes-vous sûr de vouloir supprimer la résidence "${nom}" ? Cette action est irréversible.`)) {
-                fetch(`/supprimer/${id}`, {
+
+        // Supprimer une résidence
+        function supprimerResidence(residenceId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette résidence ?')) {
+                fetch(`/supprimer/${residenceId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -356,10 +505,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Résidence supprimée avec succès !');
-                        location.reload(); // Recharger la page pour mettre à jour l'affichage
+                        location.reload();
                     } else {
-                        alert('Erreur lors de la suppression : ' + data.message);
+                        alert('Erreur lors de la suppression');
                     }
                 })
                 .catch(error => {
@@ -368,6 +516,50 @@
                 });
             }
         }
+
+        // Carte interactive
+        const residences = {{ residences|tojson }};
+        const map = L.map('map').setView([5.3600, -4.0083], 7); // Centre sur Côte d'Ivoire
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        residences.forEach(residence => {
+            if (residence.latitude && residence.longitude) {
+                const marker = L.marker([residence.latitude, residence.longitude])
+                    .addTo(map)
+                    .bindPopup(`
+                        <div class="text-center">
+                            <h6 class="fw-bold">${residence.nom}</h6>
+                            <p class="mb-1"><i class="fas fa-map-marker-alt"></i> ${residence.ville}</p>
+                            <p class="mb-2"><strong>${residence.prix} FCFA</strong></p>
+                            <a href="https://wa.me/${residence.telephone}?text=Bonjour, je suis intéressé par votre résidence ${residence.nom} à ${residence.ville}" 
+                               target="_blank" class="btn btn-success btn-sm">
+                                <i class="fab fa-whatsapp"></i> Contact
+                            </a>
+                        </div>
+                    `);
+            }
+        });
+
+        // Animation au scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.card, .hero-content').forEach(el => {
+            observer.observe(el);
+        });
     </script>
 </body>
 </html> 

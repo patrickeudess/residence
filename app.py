@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, session
 import json
 import os
+from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = 'votre_cle_secrete_ici'  # Clé secrète pour les sessions
 
 # Charger les données des résidences depuis le fichier JSON
 def load_residences():
@@ -11,6 +13,24 @@ def load_residences():
             return json.load(file)
     except FileNotFoundError:
         return []
+
+# Charger les comptes propriétaires
+def load_proprietaires():
+    try:
+        with open('proprietaires.json', 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return []
+
+# Sauvegarder les comptes propriétaires
+def save_proprietaires(proprietaires):
+    try:
+        with open('proprietaires.json', 'w', encoding='utf-8') as file:
+            json.dump(proprietaires, file, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"Erreur lors de la sauvegarde des propriétaires: {e}")
+        return False
 
 # Route principale
 @app.route('/')
@@ -188,25 +208,44 @@ def ajouter_residence():
 # Route pour supprimer une résidence
 @app.route('/supprimer/<int:residence_id>', methods=['POST'])
 def supprimer_residence(residence_id):
-    try:
-        residences = load_residences()
-        residences = [r for r in residences if r['id'] != residence_id]
-        
-        if save_residences(residences):
-            return jsonify({"success": True, "message": "Résidence supprimée avec succès"})
-        else:
-            return jsonify({"success": False, "message": "Erreur lors de la suppression"})
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Erreur: {str(e)}"})
+    # Vérifier si l'utilisateur est connecté
+    if 'proprietaire_id' not in session:
+        return jsonify({'success': False, 'message': 'Authentification requise'})
+    
+    residences = load_residences()
+    
+    # Trouver et supprimer la résidence
+    for i, residence in enumerate(residences):
+        if residence['id'] == residence_id:
+            nom_residence = residence['nom']
+            del residences[i]
+            
+            # Sauvegarder les modifications
+            if save_residences(residences):
+                return jsonify({'success': True, 'message': f'Résidence "{nom_residence}" supprimée avec succès'})
+            else:
+                return jsonify({'success': False, 'message': 'Erreur lors de la suppression'})
+    
+    return jsonify({'success': False, 'message': 'Résidence non trouvée'})
 
 # Route pour éditer une résidence
 @app.route('/editer/<int:residence_id>', methods=['GET', 'POST'])
 def editer_residence(residence_id):
+    # Vérifier si l'utilisateur est connecté
+    if 'proprietaire_id' not in session:
+        return redirect('/proprietaire')
+    
     residences = load_residences()
-    residence = next((r for r in residences if r['id'] == residence_id), None)
+    residence = None
+    
+    # Trouver la résidence à éditer
+    for r in residences:
+        if r['id'] == residence_id:
+            residence = r
+            break
     
     if not residence:
-        return "Résidence non trouvée", 404
+        return redirect('/')
     
     if request.method == 'POST':
         try:
@@ -239,40 +278,340 @@ def editer_residence(residence_id):
                 message_type = "danger"
             else:
                 # Mettre à jour la résidence
-                residence.update({
+                residence['nom'] = nom
+                residence['ville'] = ville
+                residence['adresse'] = adresse
+                residence['prix'] = int(prix)
+                residence['description'] = description
+                residence['equipements'] = equipements
+                residence['telephone'] = telephone
+                residence['telephone2'] = request.form.get('telephone2', '').strip()
+                residence['latitude'] = float(latitude) if latitude else 0.0
+                residence['longitude'] = float(longitude) if longitude else 0.0
+                
+                # Sauvegarder les modifications
+                if save_residences(residences):
+                    message = f"Résidence '{nom}' modifiée avec succès !"
+                    message_type = "success"
+                    form_data = {}
+                else:
+                    message = "Erreur lors de la sauvegarde. Veuillez réessayer."
+                    message_type = "danger"
+                    form_data = request.form.to_dict()
+        
+        except Exception as e:
+            message = f"Erreur lors de la modification: {str(e)}"
+            message_type = "danger"
+            form_data = request.form.to_dict()
+    
+    # Récupérer toutes les villes de la Côte d'Ivoire
+    villes_existantes = get_all_villes()
+    villes_existantes.sort()
+    
+    return render_template('editer.html', 
+                         residence=residence,
+                         message=message, 
+                         message_type=message_type,
+                         form_data=form_data,
+                         villes_existantes=villes_existantes)
+
+# Route pour l'espace propriétaire
+@app.route('/proprietaire', methods=['GET', 'POST'])
+def espace_proprietaire():
+    message = ""
+    message_type = ""
+    
+    if request.method == 'POST':
+        # Récupérer les identifiants
+        identifiant = request.form.get('identifiant', '').strip()  # Email ou téléphone
+        password = request.form.get('password', '').strip()
+        
+        if not identifiant or not password:
+            message = "Veuillez remplir tous les champs."
+            message_type = "danger"
+        else:
+            # Charger les propriétaires
+            proprietaires = load_proprietaires()
+            
+            # Chercher le propriétaire par email ou téléphone
+            proprietaire_trouve = None
+            for prop in proprietaires:
+                if (prop.get('email') == identifiant or 
+                    prop.get('telephone') == identifiant):
+                    proprietaire_trouve = prop
+                    break
+            
+            # Vérifier le mot de passe
+            if proprietaire_trouve and proprietaire_trouve.get('mot_de_passe') == password:
+                # Créer la session
+                session['proprietaire_id'] = proprietaire_trouve['id']
+                session['proprietaire_nom'] = proprietaire_trouve['nom']
+                return redirect('/proprietaire/dashboard')
+            else:
+                message = "Identifiant ou mot de passe incorrect."
+                message_type = "danger"
+    
+    return render_template('proprietaire/login.html', 
+                         message=message, 
+                         message_type=message_type)
+
+# Dashboard propriétaire
+@app.route('/proprietaire/dashboard')
+def dashboard_proprietaire():
+    # Vérifier si l'utilisateur est connecté
+    if 'proprietaire_id' not in session:
+        return redirect('/proprietaire')
+    
+    residences = load_residences()
+    
+    # Statistiques simulées
+    stats = {
+        'total_residences': len(residences),
+        'residences_actives': len([r for r in residences if r.get('disponible', True)]),
+        'vues_total': sum([r.get('vues', 0) for r in residences]),
+        'contacts_total': sum([r.get('contacts', 0) for r in residences]),
+        'prix_moyen': sum([r.get('prix', 0) for r in residences]) // len(residences) if residences else 0
+    }
+    
+    return render_template('proprietaire/dashboard.html', 
+                         residences=residences,
+                         stats=stats,
+                         proprietaire_nom=session.get('proprietaire_nom'))
+
+# Route de déconnexion
+@app.route('/proprietaire/deconnexion')
+def deconnexion_proprietaire():
+    session.clear()
+    return redirect('/proprietaire')
+
+# Gérer les résidences du propriétaire
+@app.route('/proprietaire/mes-residences')
+def mes_residences():
+    residences = load_residences()
+    # En production, filtrer par propriétaire authentifié
+    return render_template('proprietaire/mes_residences.html', 
+                         residences=residences)
+
+# Ajouter une résidence (version propriétaire)
+@app.route('/proprietaire/ajouter-residence', methods=['GET', 'POST'])
+def ajouter_residence_proprietaire():
+    message = ""
+    message_type = ""
+    form_data = {}
+    
+    if request.method == 'POST':
+        try:
+            # Récupérer les données du formulaire
+            nom = request.form.get('nom', '').strip()
+            ville = request.form.get('ville', '').strip()
+            adresse = request.form.get('adresse', '').strip()
+            prix = request.form.get('prix', '').strip()
+            telephone = request.form.get('telephone', '').strip()
+            description = request.form.get('description', '').strip()
+            latitude = request.form.get('latitude', '').strip()
+            longitude = request.form.get('longitude', '').strip()
+            
+            # Récupérer les équipements sélectionnés
+            equipements_selectionnes = request.form.getlist('equipements')
+            equipements = ', '.join(equipements_selectionnes) if equipements_selectionnes else ''
+            
+            # Validation des données
+            if not nom or not ville or not prix:
+                message = "Tous les champs obligatoires doivent être remplis."
+                message_type = "danger"
+            elif not prix.isdigit() or int(prix) <= 0:
+                message = "Le prix doit être un nombre positif."
+                message_type = "danger"
+            elif telephone and telephone.strip() and (not telephone.replace(' ', '').isdigit() or len(telephone.replace(' ', '')) > 14):
+                message = "Le numéro de téléphone doit contenir uniquement des chiffres et ne pas dépasser 14 caractères."
+                message_type = "danger"
+            elif request.form.get('telephone2', '').strip() and (not request.form.get('telephone2', '').strip().replace(' ', '').isdigit() or len(request.form.get('telephone2', '').strip().replace(' ', '')) > 14):
+                message = "Le numéro de téléphone 2 doit contenir uniquement des chiffres et ne pas dépasser 14 caractères."
+                message_type = "danger"
+            else:
+                # Charger les résidences existantes
+                residences = load_residences()
+                
+                # Générer un nouvel ID
+                max_id = max([r['id'] for r in residences]) if residences else 0
+                new_id = max_id + 1
+                
+                # Créer la nouvelle résidence
+                nouvelle_residence = {
+                    "id": new_id,
                     "nom": nom,
                     "ville": ville,
                     "adresse": adresse,
                     "prix": int(prix),
                     "description": description,
                     "equipements": equipements,
+                    "image": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
                     "telephone": telephone,
                     "telephone2": request.form.get('telephone2', '').strip(),
                     "latitude": float(latitude) if latitude else 0.0,
                     "longitude": float(longitude) if longitude else 0.0,
-                })
+                    "disponible": True,
+                    "proprietaire_id": 1,  # En production, utiliser l'ID du propriétaire connecté
+                    "date_creation": datetime.now().strftime("%Y-%m-%d"),
+                    "vues": 0,
+                    "contacts": 0
+                }
                 
-                # Sauvegarder les modifications
+                # Ajouter la nouvelle résidence
+                residences.append(nouvelle_residence)
+                
+                # Sauvegarder dans le fichier JSON
                 if save_residences(residences):
-                    message = f"Résidence '{nom}' modifiée avec succès !"
+                    message = f"Résidence '{nom}' ajoutée avec succès !"
                     message_type = "success"
+                    form_data = {}
                 else:
                     message = "Erreur lors de la sauvegarde. Veuillez réessayer."
                     message_type = "danger"
-                
-                return render_template('editer.html', 
-                                     residence=residence,
-                                     message=message,
-                                     message_type=message_type,
-                                     villes_existantes=get_all_villes())
+                    form_data = request.form.to_dict()
         
         except Exception as e:
-            message = f"Erreur lors de la modification: {str(e)}"
+            message = f"Erreur lors de l'ajout: {str(e)}"
             message_type = "danger"
+            form_data = request.form.to_dict()
     
-    return render_template('editer.html', 
-                         residence=residence,
-                         villes_existantes=get_all_villes())
+    # Récupérer toutes les villes de la Côte d'Ivoire
+    villes_existantes = get_all_villes()
+    villes_existantes.sort()
+    
+    return render_template('proprietaire/ajouter_residence.html', 
+                         message=message, 
+                         message_type=message_type,
+                         form_data=form_data,
+                         villes_existantes=villes_existantes)
+
+# Statistiques détaillées
+@app.route('/proprietaire/statistiques')
+def statistiques_proprietaire():
+    residences = load_residences()
+    
+    # Statistiques détaillées
+    stats_detaillees = {
+        'residences_par_ville': {},
+        'prix_moyen_par_ville': {},
+        'equipements_populaires': {},
+        'evolution_mensuelle': {}
+    }
+    
+    for residence in residences:
+        ville = residence.get('ville', 'Inconnue')
+        prix = residence.get('prix', 0)
+        equipements = residence.get('equipements', '').split(', ')
+        
+        # Compter par ville
+        if ville not in stats_detaillees['residences_par_ville']:
+            stats_detaillees['residences_par_ville'][ville] = 0
+        stats_detaillees['residences_par_ville'][ville] += 1
+        
+        # Prix moyen par ville
+        if ville not in stats_detaillees['prix_moyen_par_ville']:
+            stats_detaillees['prix_moyen_par_ville'][ville] = []
+        stats_detaillees['prix_moyen_par_ville'][ville].append(prix)
+        
+        # Équipements populaires
+        for equipement in equipements:
+            if equipement:
+                if equipement not in stats_detaillees['equipements_populaires']:
+                    stats_detaillees['equipements_populaires'][equipement] = 0
+                stats_detaillees['equipements_populaires'][equipement] += 1
+    
+    # Calculer les prix moyens
+    for ville, prix_list in stats_detaillees['prix_moyen_par_ville'].items():
+        stats_detaillees['prix_moyen_par_ville'][ville] = sum(prix_list) // len(prix_list)
+    
+    return render_template('proprietaire/statistiques.html', 
+                         stats=stats_detaillees,
+                         residences=residences)
+
+@app.route('/proprietaire/inscription', methods=['GET', 'POST'])
+def inscription_proprietaire():
+    if request.method == 'POST':
+        nom = request.form.get('nom', '').strip()
+        email = request.form.get('email', '').strip()
+        telephone = request.form.get('telephone', '').strip()
+        mot_de_passe = request.form.get('mot_de_passe', '').strip()
+        confirmation_mot_de_passe = request.form.get('confirmation_mot_de_passe', '').strip()
+        
+        # Validation
+        errors = []
+        
+        if not nom:
+            errors.append("Le nom est obligatoire")
+        
+        # Au moins email OU téléphone doit être fourni
+        if not email and not telephone:
+            errors.append("Vous devez fournir au moins un email ou un numéro de téléphone")
+        
+        if email and '@' not in email:
+            errors.append("Format d'email invalide")
+        
+        if telephone and not telephone.startswith('225'):
+            errors.append("Le numéro doit commencer par 225")
+        elif telephone and (len(telephone) < 13 or len(telephone) > 15):
+            errors.append("Le numéro doit contenir 225 + 10 à 12 chiffres")
+        
+        if not mot_de_passe:
+            errors.append("Le mot de passe est obligatoire")
+        elif len(mot_de_passe) < 6:
+            errors.append("Le mot de passe doit contenir au moins 6 caractères")
+        
+        if mot_de_passe != confirmation_mot_de_passe:
+            errors.append("Les mots de passe ne correspondent pas")
+        
+        if errors:
+            return render_template('proprietaire/inscription.html', 
+                                 errors=errors,
+                                 form_data=request.form)
+        
+        # Vérifier si le compte existe déjà
+        proprietaires = load_proprietaires()
+        
+        # Vérifier par email
+        if email:
+            for prop in proprietaires:
+                if prop.get('email') == email:
+                    errors.append("Un compte avec cet email existe déjà")
+                    return render_template('proprietaire/inscription.html', 
+                                         errors=errors,
+                                         form_data=request.form)
+        
+        # Vérifier par téléphone
+        if telephone:
+            for prop in proprietaires:
+                if prop.get('telephone') == telephone:
+                    errors.append("Un compte avec ce numéro de téléphone existe déjà")
+                    return render_template('proprietaire/inscription.html', 
+                                         errors=errors,
+                                         form_data=request.form)
+        
+        # Créer le nouveau compte
+        nouveau_proprietaire = {
+            "id": len(proprietaires) + 1,
+            "nom": nom,
+            "email": email,
+            "telephone": telephone,
+            "mot_de_passe": mot_de_passe,  # En production, hasher le mot de passe
+            "date_creation": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        proprietaires.append(nouveau_proprietaire)
+        
+        if save_proprietaires(proprietaires):
+            success_message = "Compte créé avec succès ! Vous pouvez maintenant vous connecter."
+            return render_template('proprietaire/inscription.html', 
+                                 success_message=success_message)
+        else:
+            errors.append("Erreur lors de la création du compte. Veuillez réessayer.")
+            return render_template('proprietaire/inscription.html', 
+                                 errors=errors,
+                                 form_data=request.form)
+    
+    return render_template('proprietaire/inscription.html')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000) 
